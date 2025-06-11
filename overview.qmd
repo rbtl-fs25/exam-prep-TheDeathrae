@@ -1,0 +1,661 @@
+---
+title: "Overview"
+format:
+  html:
+    toc: true
+editor: visual
+execute:
+  warning: false
+---
+
+This is a summary of the R related parts of the rbtl-fs25 [lecture](https://rbtl-fs25.github.io/website/) for the exam.
+
+## Packages
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(knitr)
+library(gt)
+library(dplyr)
+library(readr)
+library(readxl)
+library(sf)
+library(rnaturalearth)
+library(gapminder)
+library(palmerpenguins)
+library(nycflights13)
+```
+
+```{r}
+#| label: name-for-code-block
+#| message: false
+#| eval: true
+```
+
+## Read
+
+```{r}
+#| eval: false  
+
+new_data <- read_rds(here::here("data/existing_data.rds"))  
+
+new_data <- read_csv("data/existing_data.csv")  
+
+new_data <- read_excel("data/raw/existing_data.xlsx")
+```
+
+## Explore
+
+```{r}
+head(gapminder)
+tail(gapminder)
+glimpse(gapminder)
+str(gapminder)
+nrow(gapminder)
+ncol(gapminder)
+gapminder
+glimpse(gapminder)
+distinct(gapminder, year)
+```
+
+## Transform
+
+```{r}
+#| eval: false
+
+filter()
+
+# Examples
+filter(residence == "national")
+
+filter(residence != "national")
+
+filter(residence == "national", iso3 == "SEN") 
+
+filter(iso3 == "UGA" | iso3 == "PER" | iso3 == "IND") 
+
+filter(iso3 %in% c("UGA", "PER", "IND"))
+
+filter(percent > 80)
+
+filter(percent <= 5)
+
+filter(is.na(percent))
+
+filter(!is.na(percent))
+
+filter(species == "Gentoo" & bill_depth_mm >= 15.5)
+```
+
+```{r}
+#| eval: false
+
+# The function arrange() changes the order of the rows.
+arrange()
+
+# Examples
+arrange(percent)
+
+arrange(desc(percent))
+```
+
+```{r}
+#| eval: false
+
+# The select() function chooses columns based on their names.
+select()
+
+# Examples
+select(name, percent)
+
+select(-varname_short)
+
+select(name:region_sdg, percent)
+```
+
+```{r}
+#| eval: false
+
+# The rename() function changes the names of variables.
+rename()
+
+# Examples
+rename(old_name = new_name)
+```
+
+```{r}
+#| eval: false
+
+# The mutate() function adds new variables based on existing variables or external data.
+mutate()
+
+# Examples
+mutate(prop = percent / 100)
+
+mutate(id = seq(1:n()))
+
+mutate(var_a = case_when(
+  var_a == 999 ~ NA,
+  .default = var_a
+))
+
+mutate(
+  var_d = str_split(var_d, "")
+)
+```
+
+```{r}
+#| eval: false
+
+relocate()
+
+# Examples
+sanitation |> 
+  mutate(id = 1:n()) |> 
+  relocate(id)
+
+sanitation |> 
+  mutate(id = 1:n()) |> 
+  relocate(id, .before = name)
+```
+
+```{r}
+#| eval: false
+
+# The summarise() function reduces multiple values down to a single summary.
+summarise()
+
+# Examples
+summarise(
+    count = n(),
+    new_variable = mean(existing_variable),
+    new_variable = median(existing_variable)
+  )
+
+summarise(mean_percent = mean(percent, na.rm = TRUE))
+
+summarise(n = n(),
+          mean_percent = mean(percent, na.rm = TRUE))
+
+summarise(n = n(),
+          mean_percent = mean(percent),
+          sd_percent = sd(percent))
+
+summarise(
+    count = n(),
+    mean = mean(generation_kg_capita),
+    sd = sd(generation_kg_capita),
+    median = median(generation_kg_capita),
+    min = min(generation_kg_capita),
+    max = max(generation_kg_capita)
+)
+```
+
+```{r}
+#| eval: false
+
+# The group_by() function is used to group the data by one or more variables.
+group_by()
+
+# Examples
+group_by(existing_variable)
+
+group_by(existing_variable, existing_variable)
+
+sanitation_national_2020_sm |> 
+  group_by(region_sdg)
+
+sanitation_national_2020_sm |> 
+  group_by(region_sdg) |> 
+  summarise(n = n(),
+            mean_percent = mean(percent),
+            sd_percent = sd(percent))
+
+sanitation_national_2020_sm |> 
+  filter(!is.na(percent)) |> 
+  group_by(region_sdg) |> 
+  summarise(n = n(),
+            mean_percent = mean(percent),
+            sd_percent = sd(percent))
+```
+
+```{r}
+#| eval: false
+
+# The count() function is a convenient wrapper for group_by() and summarise(n = n()). You can prepare frequency tables with count().
+count()
+
+# Examples
+sanitation |> 
+  count(region_sdg)
+
+sanitation |> 
+  count(varname_short)
+
+sanitation |> 
+  count(varname_long)
+
+sanitation |> 
+  count(varname_short, varname_long)
+
+```
+
+```{r}
+#| eval: false
+
+# From long to wide
+pivot_wider
+
+# Examples
+pivot_wider(names_from = waste_category,
+              values_from = mean_percent) 
+
+```
+
+```{r}
+#| eval: false
+
+# Other examples
+
+ungroup()
+
+fmt_number(columns = c(mean_bill_depth, sd_bill_depth),
+           decimals = 1)
+
+unnest(var_d)
+```
+
+## Vectors
+
+```{r}
+# Numeric
+c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+seq(1, 10)
+
+# Character
+c("a", "b", "c", "d", "e", "f")
+
+letters
+
+# Numeric sequences
+seq(1, 100, 1)
+
+runif(100, 1, 100)
+
+sample(1:100, 100, replace = FALSE)
+
+seq_along(letters)
+
+# Numeric sequences along a character vector
+seq_along(letters)
+
+month.name
+
+seq_along(month.name)
+
+# Distribution of random numbers
+runif(n = 1000, min = 1, max = 100) |> hist()
+
+rnorm(n = 1000, mean = 500, sd = 150) |> hist()
+```
+
+## Factors
+
+```{r}
+#| eval: false
+
+# Examples
+levels_varname_short <- c("san_od", "san_unimp", "san_lim", "san_bas", "san_sm")
+
+levels_varname_long <- c("no sanitation facilities", 
+                         "unimproved sanitation facilities", 
+                         "limited sanitation services", 
+                         "basic sanitation services", 
+                         "safely managed sanitation services")
+
+
+sanitation_lvl <- sanitation |> 
+  mutate(varname_long = factor(varname_long, levels = levels_varname_long),
+         varname_short = factor(varname_short, levels = levels_varname_short),
+         residence = factor(residence, levels = c("national", "rural", "urban"))
+         ) 
+
+levels_income <- c("HIC", "UMC", "LMC", "LIC")
+
+waste_lvl <- waste |> 
+  mutate(income_id = factor(income_id, levels = levels_income))
+```
+
+## Dates and Times
+
+In R and other programming languages, dates are stored as numbers. The number of days since 1970-01-01 is the ISO 8601 standard.
+
+In Excel, dates are stored as numbers of days since 1900-01-01. In Excel, the date number 1 corresponds to "1900-01-01," but this system incorrectly considers 1900 as a leap year, which it is not. As a result, to correctly interpret date numbers that originate from systems like Excel, the origin "1899-12-30" is used to account for this discrepancy.
+
+```{r}
+#| eval: false
+
+dates_class <- dates |> 
+    mutate(date_iso = as_date(date_iso)) |> 
+    mutate(date_us = mdy(date_us)) |> 
+    mutate(date_eu = dmy(date_eu)) |> 
+    mutate(date_num = as_date(date_num, origin = "1899-12-30")) |> 
+    mutate(date = as_date(date_time)) |> 
+    mutate(date_time_tz = with_tz(date_time, tzone = "Africa/Kampala")) |>
+    mutate(today = today())
+
+OlsonNames()
+
+as.numeric(today())
+as_date(1)
+
+dates_class |> 
+    select(today) |> 
+    mutate(year = year(today)) |>
+    mutate(month = month(today, label = TRUE, abbr = FALSE, locale = "fr_FR")) |> 
+    mutate(quarter = quarter(today)) |>
+    mutate(week = week(today)) |>
+    mutate(day = day(today)) |>
+    mutate(day_of_week = wday(today, label = TRUE, abbr = FALSE, locale = "fr_FR")) |>
+    mutate(day_of_year = yday(today)) |>
+    mutate(week_of_year = week(today))
+```
+
+## Tables
+
+References tables using @tbl-name.
+
+```{r}
+#| eval: false
+
+gt()
+
+# Examples
+waste_tbl_income |> 
+    gt() |> 
+    tab_header(title = "Waste generation per capita (kg/year) by income group",
+               subtitle = "Data from 326 cities") |> 
+    fmt_number(columns = count:max, decimals = 0) |> 
+    cols_label(income_cat = "income category")
+```
+
+```{r}
+#| eval: false
+
+#| label: tbl-name
+#| tbl-cap: "Caption"
+
+kable()
+
+# Examples
+
+waste_tbl_income |> 
+    rename(`income category` = income_cat) |> 
+    kable(digits = 0)
+```
+
+## Joining Tables
+
+-   `left_join()`: all rows from x
+
+<!-- -->
+
+-   `right_join()`: all rows from y
+
+<!-- -->
+
+-   `full_join()`: all rows from both x and y
+
+## Visualisations
+
+References figures using @fig-name.
+
+Examples
+
+```{r}
+#| label: boxplot-continent
+#| fig-width: 5
+#| fig-asp: 0.618
+
+gapminder_2007 <- gapminder |> 
+  filter(year == 2007)
+
+ggplot(data = gapminder_2007, 
+       mapping = aes(x = continent, 
+                     y = lifeExp)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1, alpha = 1/4, size = 3) +
+  labs(x = NULL,
+       y = "life expectancy") +
+  theme_minimal() 
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = gapminder_summary_continent_year,
+       mapping = aes(x = year,
+                     y = lifeExp,
+                     color = continent)) +
+  geom_line() +
+  geom_point()
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = gapminder_summary_2007,
+       mapping = aes(x = continent,
+                     y = count)) +
+  geom_col()
+```
+
+```{r}
+ggplot(data = gapminder_2007,
+       mapping = aes(x = continent)) +
+  geom_bar()
+```
+
+```{r}
+ggplot(data = gapminder_2007,
+       mapping = aes(x = lifeExp, 
+                     fill = continent)) +
+  geom_histogram(col = "grey30", breaks = seq(40, 85, 2.5)) 
+
+```
+
+```{r}
+ggplot(data = gapminder_2007,
+       mapping = aes(x = gdpPercap,
+                     y = lifeExp,
+                     size = pop,
+                     color = country)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~continent) 
+```
+
+```{r}
+ggplot(data = gapminder,
+       mapping = aes(x = year, 
+                     y = lifeExp, 
+                     group = country, 
+                     color = country)) +
+  geom_line(lwd = 1, show.legend = FALSE) + 
+  facet_wrap(~continent) +
+  # scale_color_manual(values = country_colors) +
+  theme_minimal() 
+```
+
+```{r}
+world <- ne_countries(scale = "small", returnclass = "sf")
+
+world |> 
+  mutate(income_grp = factor(income_grp, ordered = T)) |> 
+  ggplot(aes(fill = income_grp)) + 
+  geom_sf() +
+  theme_void() +
+  theme(legend.position = "top") +
+  labs(fill = "Income Group:") +
+  guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = sanitation_nigeria_urban_rural,
+       mapping = aes(x = year, 
+                     y = percent, 
+                     color = varname_short)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~residence) +
+  scale_color_colorblind() 
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = sanitation_uga,
+       mapping = aes(x = residence, 
+                     y = percent, 
+                     fill = varname_long)) +
+  geom_col() +
+  facet_wrap(~year) +
+  scale_fill_colorblind() +
+  geom_text(aes(label = round(percent, 1)), 
+            position = position_stack(vjust = 0.5),
+            size = 3,
+            color = "white") 
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = sanitation_2020,
+       mapping = aes(x = percent, fill = varname_short)) +
+  geom_histogram() +
+  facet_grid(varname_short ~ residence, scales = "free_y") +
+  scale_fill_colorblind() +
+  theme(legend.position = "none") 
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = sanitation_uga,
+       mapping = aes(x = residence, 
+                     y = percent, 
+                     fill = varname_long)) +
+  geom_col() +
+  facet_wrap(~year) +
+  scale_fill_colorblind() +
+  geom_text(aes(label = round(percent, 1)), 
+            position = position_stack(vjust = 0.5),
+            size = 3,
+            color = "white") 
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = waste_capita,
+       mapping = aes(x = income_id, 
+                     y = generation_kg_capita, 
+                     color = income_id)) +
+  geom_boxplot(outlier.fill = NA) +
+  geom_jitter(width = 0.1, alpha = 0.3) +
+  scale_color_colorblind() +
+  labs(x = "Income group",
+       y = "Waste generation (tons per capita per year)")
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = waste_cat,
+       mapping = aes(x = income_cat, 
+                     y = generation_kg_capita, 
+                     color = income_cat)) +
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size = 3, width = 0.1, alpha = 0.3) +
+    scale_color_colorblind() +
+    labs(x = "Income group",
+         y = "Waste generation (tons per capita per year)") 
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = waste_fct,
+       mapping = aes(x = income_cat, 
+                     y = generation_kg_capita, 
+                     color = income_cat)) +
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(size = 3, width = 0.1, alpha = 0.3) +
+    scale_color_colorblind() +
+    labs(x = "Income group",
+         y = "Waste generation (tons per capita per year)") 
+```
+
+```{r}
+#| fig-width: 5
+#| fig-asp: 0.618
+#| fig-cap: Bill length and depth of penguins
+#| label: fig-penguins
+
+ggplot(data = penguins,
+       mapping = aes(x = bill_length_mm, 
+                     y = bill_depth_mm,
+                     color = species,
+                     shape = species)) +
+  geom_point() +
+  scale_color_colorblind() +
+  labs(x = "Bill length (mm)", y = "Bill depth (mm)") +
+  theme_minimal()
+```
+
+```{r}
+#| eval: false
+
+ggplot(data = waste_data_long_mean, 
+       mapping = aes(x = mean_percent, 
+                     y = waste_category, 
+                     fill = income_cat)) + 
+  geom_col(position = position_dodge()) + 
+  labs(title = "Waste Composition", 
+       subtitle = "Mean percentages of nine waste categories displayed by income categories",
+       x = "mean (percent)", 
+       y = "waste category", 
+       fill = "Income category", 
+       caption = "Data from: https://datacatalog.worldbank.org/search/dataset/0039597") + 
+  scale_x_continuous(breaks = seq(0, 50, 5)) + 
+  scale_fill_brewer(type = "qual", palette = 3) +
+  theme_minimal() + 
+  theme(panel.grid.minor = element_blank(), 
+        panel.grid.major.y = element_blank())
+```
+
+```{r}
+#| eval: false
+
+df_likert_sum |> 
+  ggplot(aes(x = var_c, y = n)) +
+  geom_col() +
+  labs(
+    title = "Likert data",
+    x = "Likert scale",
+    y = "Count"
+  )
+```
+
+## Shortcuts
+
+-   Keyboard shortcut for pipe operator: Ctrl / Cmd + Shift + M
+-   Keyboard shortcut for assignment operator: Alt + -
+
+## LLM
+
+Use and share link: <https://www.perplexity.ai/>
