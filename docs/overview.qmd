@@ -3,6 +3,7 @@ title: "Overview"
 format:
   html:
     toc: true
+date: today
 editor: visual
 execute:
   warning: false
